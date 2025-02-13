@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/openapi3gen"
 )
 
 // NewEngine creates a new Engine with the given options.
@@ -130,6 +131,13 @@ func WithOpenAPIConfig(config OpenAPIConfig) func(*Engine) {
 		}
 
 		WithMiddlewareConfig(config.MiddlewareConfig)(e)
+	}
+}
+
+// WithOpenAPIGeneratorOptions passes through options to the openapi generator
+func WithOpenAPIGeneratorOptions(config ...openapi3gen.Option) func(*Engine) {
+	return func(e *Engine) {
+		e.OpenAPI = NewOpenAPI(config...)
 	}
 }
 

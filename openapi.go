@@ -15,11 +15,11 @@ import (
 	"github.com/getkin/kin-openapi/openapi3gen"
 )
 
-func NewOpenAPI() *OpenAPI {
+func NewOpenAPI(opts ...openapi3gen.Option) *OpenAPI {
 	desc := NewOpenApiSpec()
 	return &OpenAPI{
 		description:            &desc,
-		generator:              openapi3gen.NewGenerator(),
+		generator:              openapi3gen.NewGenerator(opts...),
 		globalOpenAPIResponses: []openAPIResponse{},
 		Config:                 defaultOpenAPIConfig,
 	}
