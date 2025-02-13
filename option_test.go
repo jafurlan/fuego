@@ -486,6 +486,71 @@ func TestAddResponse(t *testing.T) {
 	})
 }
 
+func TestRemoveResponse(t *testing.T) {
+	t.Run("base", func(t *testing.T) {
+		s := fuego.NewServer()
+		route := fuego.Get(s, "/test", helloWorld,
+			fuego.OptionAddResponse(
+				http.StatusConflict,
+				"Conflict: Pet with the same name already exists",
+				fuego.Response{
+					ContentTypes: []string{"application/json"},
+					Type:         fuego.HTTPError{},
+				},
+			),
+			fuego.OptionRemoveResponse(400),
+		)
+
+		require.Equal(t, 4, route.Operation.Responses.Len()) // 200, 409, 500, default
+	})
+}
+
+func TestAddDefaultResponse(t *testing.T) {
+	t.Run("base", func(t *testing.T) {
+		s := fuego.NewServer()
+		route := fuego.Get(s, "/test", helloWorld, fuego.OptionAddDefaultResponse(
+			"Conflict: Pet with the same name already exists",
+			fuego.Response{
+				ContentTypes: []string{"application/json"},
+				Type:         fuego.HTTPError{},
+			},
+		))
+		require.Equal(t, 4, route.Operation.Responses.Len()) // 200, 400, 500, default
+		resp := route.Operation.Responses.Value("default")
+		require.NotNil(t, resp)
+		require.NotNil(t, resp.Value.Content.Get("application/json"))
+		require.Nil(t, resp.Value.Content.Get("application/xml"))
+		require.Equal(t, "Conflict: Pet with the same name already exists", *route.Operation.Responses.Value("default").Value.Description)
+	})
+
+	t.Run("no content types provided", func(t *testing.T) {
+		s := fuego.NewServer()
+		route := fuego.Get(s, "/test", helloWorld, fuego.OptionAddDefaultResponse(
+			"Conflict: Pet with the same name already exists",
+			fuego.Response{
+				Type: fuego.HTTPError{},
+			},
+		))
+		require.Equal(t, 4, route.Operation.Responses.Len()) // 200, 400, 500, default
+		resp := route.Operation.Responses.Value("default")
+		require.NotNil(t, resp)
+		require.NotNil(t, resp.Value.Content.Get("application/json"))
+		require.NotNil(t, resp.Value.Content.Get("application/xml"))
+		require.Equal(t, "Conflict: Pet with the same name already exists", *route.Operation.Responses.Value("default").Value.Description)
+	})
+
+	t.Run("should be fatal", func(t *testing.T) {
+		s := fuego.NewServer()
+
+		require.Panics(t, func() {
+			fuego.Get(s, "/test", helloWorld, fuego.OptionAddDefaultResponse(
+				"Conflict: Pet with the same name already exists",
+				fuego.Response{},
+			))
+		})
+	})
+}
+
 func TestHide(t *testing.T) {
 	s := fuego.NewServer()
 

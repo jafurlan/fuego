@@ -361,6 +361,30 @@ func OptionAddResponse(code int, description string, response Response) func(*Ba
 	}
 }
 
+// OptionRemoveResponse removes a response to a route by status code
+// This should be used to remove the default generated 400 and 500 responses if needed.
+func OptionRemoveResponse(code int) func(*BaseRoute) {
+	return func(r *BaseRoute) {
+		r.Operation.Responses.Delete(strconv.Itoa(code))
+	}
+}
+
+// OptionAddDefaultResponse adds a default response to a route
+// Required: Response.Type must be set
+// Optional: Response.ContentTypes will default to `application/json` and `application/xml` if not set
+func OptionAddDefaultResponse(description string, response Response) func(*BaseRoute) {
+	return func(r *BaseRoute) {
+		if r.Operation.Responses == nil {
+			r.Operation.Responses = openapi3.NewResponses()
+		}
+		r.Operation.Responses.Set(
+			"default", &openapi3.ResponseRef{
+				Value: r.OpenAPI.buildOpenapi3Response(description, response),
+			},
+		)
+	}
+}
+
 // OptionRequestContentType sets the accepted content types for the route.
 // By default, the accepted content types is */*.
 // This will override any options set at the server level.
